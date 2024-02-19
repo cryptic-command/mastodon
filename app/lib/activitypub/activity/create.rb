@@ -439,7 +439,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     (
       !@status.account.local? &&
       @status.account.followers_count <= 2 && # used to be == 0
-      @status.account.created_at > 1.day.ago &&
+      @status.account.created_at > 6.hours.ago && # used to be 1.day.ago
       @mentions.count >= 2
     )
   end
