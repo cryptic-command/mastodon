@@ -88,6 +88,8 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
 
       # Delete status on zero follower user and nearly created account with include some replies
       if like_a_spam?
+        Rails.logger.warn { "Spam blocked: #{@status.account.acct.inspect} | #{@status.text.inspect}" }
+
         @status = nil
         raise ActiveRecord::Rollback
       end
@@ -437,10 +439,25 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
 
   def like_a_spam?
     (
+      # matches generally
       !@status.account.local? &&
       @status.account.followers_count <= 2 && # used to be == 0
       @status.account.created_at >= 48.hours.ago && # used to be 1.day.ago
       @mentions.count >= 3
+    ) ||
+    (
+      # matches specific format
+      !@status.account.local? &&
+      @mentions.count >= 5 &&
+      @status.account.username.length == 10
+    ) ||
+    (
+      # matches specific words
+      !@status.account.local? &&
+      (
+        @status.text.include?("ctkpaarr") ||
+        @status.text.include?("荒らし.com")
+      )
     )
   end
 end
